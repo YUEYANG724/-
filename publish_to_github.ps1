@@ -94,6 +94,7 @@ if ($originCheck -ne 0) {
 
 Write-Host "[3/5] Commit changes..."
 & $gitExe add .
+& $gitExe rm --cached --ignore-unmatch "__pycache__/app.cpython-312.pyc" "server.err.log" "server.out.log" 1>$null 2>$null
 & $gitExe commit -m "Update customer album"
 if ($LASTEXITCODE -ne 0) {
   Write-Host "No new commit created. Continue to push..."
