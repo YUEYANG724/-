@@ -1,0 +1,6 @@
+/api/categories
+  Content-Type: application/json; charset=utf-8
+/api/categories.json
+  Content-Type: application/json; charset=utf-8
+/*
+  X-Content-Type-Options: nosniff
