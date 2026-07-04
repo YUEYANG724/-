@@ -22,7 +22,8 @@ PHOTO_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
 BACKGROUND_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 BACKGROUND_BASENAME = "header_background"
 DEFAULT_LOCAL_URL = "http://127.0.0.1:5000/"
-PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "").strip()
+DEFAULT_PUBLIC_BASE_URL = "https://www.youzizhijia.dpdns.org/"
+PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", DEFAULT_PUBLIC_BASE_URL).strip()
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "").strip()
 LOCAL_ADMIN_HOSTS = {"localhost", "127.0.0.1", "::1", "youzizhijia.local"}
 
