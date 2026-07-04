@@ -47,7 +47,7 @@ function Invoke-NativeAllowFail {
   return $code
 }
 
-Write-Host "[1/4] Generate GitHub Pages static album: docs..."
+Write-Host "[1/5] Generate GitHub Pages static album: docs..."
 & $pythonExe "export_static.py"
 if ($LASTEXITCODE -ne 0) {
   Write-Host "Export failed" -ForegroundColor Red
@@ -57,14 +57,14 @@ if ($LASTEXITCODE -ne 0) {
 
 $repoCheck = Invoke-NativeAllowFail $gitExe @("rev-parse", "--is-inside-work-tree")
 if ($repoCheck -eq 0) {
-  Write-Host "[2/4] Git repository already exists"
+  Write-Host "[2/5] Git repository already exists"
 } else {
   if (Test-Path -LiteralPath ".git") {
     $backupName = ".git-broken-" + (Get-Date -Format "yyyyMMddHHmmss")
-    Write-Host "[2/4] Broken .git found. Backup to $backupName"
+    Write-Host "[2/5] Broken .git found. Backup to $backupName"
     Rename-Item -LiteralPath ".git" -NewName $backupName
   }
-  Write-Host "[2/4] Initialize Git repository..."
+  Write-Host "[2/5] Initialize Git repository..."
   & $gitExe init
   if ($LASTEXITCODE -ne 0) {
     Write-Host "Git init failed" -ForegroundColor Red
@@ -92,15 +92,38 @@ if ($originCheck -ne 0) {
   & $gitExe remote add origin $repoUrl
 }
 
-Write-Host "[3/4] Commit changes..."
+Write-Host "[3/5] Commit changes..."
 & $gitExe add .
 & $gitExe commit -m "Update customer album"
 if ($LASTEXITCODE -ne 0) {
   Write-Host "No new commit created. Continue to push..."
 }
 
-Write-Host "[4/4] Push to GitHub..."
+Write-Host "[4/5] Sync GitHub remote..."
 & $gitExe branch -M main
+$remoteMainCheck = Invoke-NativeAllowFail $gitExe @("ls-remote", "--exit-code", "--heads", "origin", "main")
+if ($remoteMainCheck -eq 0) {
+  & $gitExe fetch origin main
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host ""
+    Write-Host "Fetch failed. Please check your network or GitHub login." -ForegroundColor Red
+    Read-Host "Press Enter to exit"
+    exit 1
+  }
+
+  & $gitExe merge --allow-unrelated-histories --no-edit origin/main
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host ""
+    Write-Host "Sync failed because GitHub and local files have conflicts." -ForegroundColor Red
+    Write-Host "Open GitHub Desktop, choose this folder, resolve conflicts, then run this file again."
+    Read-Host "Press Enter to exit"
+    exit 1
+  }
+} else {
+  Write-Host "Remote main branch not found. Continue to first push..."
+}
+
+Write-Host "[5/5] Push to GitHub..."
 & $gitExe push -u origin main
 if ($LASTEXITCODE -ne 0) {
   Write-Host ""
