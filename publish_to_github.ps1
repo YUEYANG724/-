@@ -4,7 +4,23 @@ $projectDir = $PSScriptRoot
 Set-Location -LiteralPath $projectDir
 
 $pythonExe = "C:\Users\28471\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
-$gitExe = "C:\Users\28471\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\git\cmd\git.exe"
+$githubDesktopGit = Get-ChildItem -Path "$env:LOCALAPPDATA\GitHubDesktop" -Recurse -Filter "git.exe" -ErrorAction SilentlyContinue |
+  Where-Object { $_.FullName -like "*\resources\app\git\cmd\git.exe" } |
+  Sort-Object FullName -Descending |
+  Select-Object -First 1
+$bundledGitRoot = "C:\Users\28471\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\git"
+$bundledGitExe = "$bundledGitRoot\cmd\git.exe"
+
+if ($githubDesktopGit) {
+  $gitExe = $githubDesktopGit.FullName
+  $gitRoot = Split-Path -Parent (Split-Path -Parent $gitExe)
+  $env:PATH = "$gitRoot\mingw64\bin;$gitRoot\mingw64\libexec\git-core;$gitRoot\cmd;$env:PATH"
+  $env:GIT_EXEC_PATH = "$gitRoot\mingw64\libexec\git-core"
+} else {
+  $gitExe = $bundledGitExe
+  $env:PATH = "$bundledGitRoot\mingw64\bin;$bundledGitRoot\mingw64\libexec\git-core;$bundledGitRoot\cmd;$env:PATH"
+  $env:GIT_EXEC_PATH = "$bundledGitRoot\mingw64\libexec\git-core"
+}
 
 if (-not (Test-Path -LiteralPath $pythonExe)) {
   Write-Host "Python not found: $pythonExe" -ForegroundColor Red
@@ -78,7 +94,7 @@ if ($originCheck -ne 0) {
 
 Write-Host "[3/4] Commit changes..."
 & $gitExe add .
-& $gitExe commit -m "更新客户相册"
+& $gitExe commit -m "Update customer album"
 if ($LASTEXITCODE -ne 0) {
   Write-Host "No new commit created. Continue to push..."
 }
@@ -86,6 +102,12 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "[4/4] Push to GitHub..."
 & $gitExe branch -M main
 & $gitExe push -u origin main
+if ($LASTEXITCODE -ne 0) {
+  Write-Host ""
+  Write-Host "Push failed. Please check the GitHub login window or repository URL." -ForegroundColor Red
+  Read-Host "Press Enter to exit"
+  exit 1
+}
 
 Write-Host ""
 Write-Host "Done. GitHub Pages will deploy automatically. Visit later:"
